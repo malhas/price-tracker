@@ -1,16 +1,32 @@
-# This is a sample Python script.
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
+import pandas
+import time
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+data = pandas.read_csv("products.csv")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+for index, line in data.iterrows():
+    price = 0
+    driver.get(line.link)
+    time.sleep(2)
+    if line.type == "id":
+        price = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, line.location)))
+        price = float(price.text.split("€")[0].replace(",", "."))
+    elif line.type == "lionofporches":
+        WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="popup-campaign"]/div[2]'))).click()
+        time.sleep(2)
+        items = WebDriverWait(driver, 10).until(ec.presence_of_all_elements_located((By.CLASS_NAME, "current")))
+        price = 1000
+        for item in items:
+            item_price = float(item.text.split("€")[0].replace(",", "."))
+            if item_price < price:
+                price = item_price
+    print(price)
+    if price < int(line.target):
+        print(f"Buy {line.link}")
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

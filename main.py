@@ -6,9 +6,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 import pandas
 import time
+from datetime import datetime
 
 data = pandas.read_csv("products.csv")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+today = datetime.now().date()
 for index, line in data.iterrows():
     price = 0
     driver.get(line.link)
@@ -25,7 +27,20 @@ for index, line in data.iterrows():
             item_price = float(item.text.split("€")[0].replace(",", "."))
             if item_price < price:
                 price = item_price
-    print(price)
+    try:
+        with open(f"items/{line['item']}.csv", "r") as file:
+            lines = file.readlines()
+    except FileNotFoundError:
+        with open(f"items/{line['item']}.csv", "w") as file:
+            file.write(f"{today},{price}\n")
+    else:
+        with open(f"items/{line['item']}.csv", "a") as file:
+            if len(lines) > 0:
+                last_price = float(lines[-1].split(",")[1])
+                if last_price != price:
+                    file.write(f"{today},{price}\n")
+            else:
+                file.write(f"{today},{price}\n")
     if price < int(line.target):
         print(f"Buy {line.link}")
 

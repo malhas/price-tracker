@@ -10,7 +10,7 @@ from datetime import datetime
 
 data = pandas.read_csv("products.csv")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-today = datetime.now().date()
+today = datetime.now().date().strftime("%d-%m-%Y")
 for index, line in data.iterrows():
     price = 0
     driver.get(line.link)

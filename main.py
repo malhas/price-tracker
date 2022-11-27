@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
@@ -9,7 +10,11 @@ import time
 from datetime import datetime
 
 data = pandas.read_csv("products.csv")
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+options = Options()
+options.add_argument("--no-sandbox")
+options.add_argument("--headless")
+options.add_argument("--disable-gpu")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 today = datetime.now().date().strftime("%d-%m-%Y")
 for index, line in data.iterrows():
     price = 0

@@ -1,7 +1,5 @@
-/items/*
 /venv/*
 /.replit
 /poetry.lock
-/products.csv
 /pyproject.toml
 /replit.nix

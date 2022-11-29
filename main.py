@@ -39,24 +39,25 @@ for index, line in data.iterrows():
         time.sleep(2)
         items = WebDriverWait(driver, 10).until(
             ec.presence_of_all_elements_located((By.CLASS_NAME, "current")))
-        price = 1000
-        for item in items:
-            item_price = float(item.text.split("€")[0].replace(",", "."))
-            if item_price < price:
-                price = item_price
-    try:
-        with open(f"items/{line['item']}.csv", "r") as file:
-            lines = file.readlines()
-    except FileNotFoundError:
-        with open(f"items/{line['item']}.csv", "w") as file:
-            file.write(f"{today},{price}\n")
-    else:
-        with open(f"items/{line['item']}.csv", "a") as file:
-            if len(lines) > 0:
-                last_price = float(lines[-1].split(",")[1])
-                if last_price != price:
-                    file.write(f"{today},{price}\n")
-            else:
+        if len(items) > 0:
+            for item in items:
+                item_price = float(item.text.split("€")[0].replace(",", "."))
+                if item_price < price:
+                    price = item_price
+    if price > 0:
+        try:
+            with open(f"items/{line['item']}.csv", "r") as file:
+                lines = file.readlines()
+        except FileNotFoundError:
+            with open(f"items/{line['item']}.csv", "w") as file:
                 file.write(f"{today},{price}\n")
+        else:
+            with open(f"items/{line['item']}.csv", "a") as file:
+                if len(lines) > 0:
+                    last_price = float(lines[-1].split(",")[1])
+                    if last_price != price:
+                        file.write(f"{today},{price}\n")
+                else:
+                    file.write(f"{today},{price}\n")
     if price < int(line.target):
         print(f"Buy {line.link}")

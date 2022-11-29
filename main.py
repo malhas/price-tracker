@@ -10,6 +10,10 @@ import pandas
 import time
 from datetime import datetime
 
+def price_str_to_float(price_euro:str, euro_pos:int = 0) -> float:
+    '''Convert string price to float'''
+    return float(price_euro.split("€")[euro_pos].replace(",", "."))
+
 data = pandas.read_csv("products.csv")
 options = Options()
 options.add_argument("--no-sandbox")
@@ -27,21 +31,25 @@ today = datetime.now().date().strftime("%d-%m-%Y")
 for index, line in data.iterrows():
     price = 0
     driver.get(line.link)
-    time.sleep(2)
+    time.sleep(0.5)
     if line.type == "id":
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.ID, line.location)))
-        price = float(price.text.split("€")[0].replace(",", "."))
+        price = price_str_to_float(price.text)
+    if line.type == "class":
+        price = WebDriverWait(driver, 10).until(
+            ec.presence_of_element_located((By.CLASS_NAME, line.location)))
+        price = price_str_to_float(price.text, 1)
     elif line.type == "lionofporches":
         WebDriverWait(driver, 10).until(
             ec.element_to_be_clickable(
                 (By.XPATH, '//*[@id="popup-campaign"]/div[2]'))).click()
-        time.sleep(2)
+        time.sleep(1)
         items = WebDriverWait(driver, 10).until(
             ec.presence_of_all_elements_located((By.CLASS_NAME, "current")))
         if len(items) > 0:
             for item in items:
-                item_price = float(item.text.split("€")[0].replace(",", "."))
+                item_price = price_str_to_float(item.text)
                 if item_price < price:
                     price = item_price
     if price > 0:
@@ -50,7 +58,7 @@ for index, line in data.iterrows():
                 lines = file.readlines()
         except FileNotFoundError:
             with open(f"items/{line['item']}.csv", "w") as file:
-                file.write(f"{today},{price}\n")
+                file.write(f"Date,Price,Min,Max,Avg\n{today},{price},{price},{price},{price}\n")
         else:
             with open(f"items/{line['item']}.csv", "a") as file:
                 if len(lines) > 0:
@@ -58,6 +66,6 @@ for index, line in data.iterrows():
                     if last_price != price:
                         file.write(f"{today},{price}\n")
                 else:
-                    file.write(f"{today},{price}\n")
-    if price < int(line.target):
+                    file.write(f"Date,Price,Min,Max,Avg\n{today},{price},{price},{price},{price}\n")
+    if price < float(line.target):
         print(f"Buy {line.link}")

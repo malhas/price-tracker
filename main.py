@@ -10,10 +10,24 @@ import pandas
 import time
 from datetime import datetime
 import numpy
+import smtplib
+import os
+
+OWN_EMAIL = os.environ['SENDER_EMAIL']
+OWN_PASSWORD = os.environ['SENDER_EMAIL_PASSWORD']
 
 def price_str_to_float(price_euro:str, euro_pos:int = 0) -> float:
     '''Convert string price to float'''
     return float(price_euro.split("€")[euro_pos].replace(",", "."))
+
+def send_email(product: str, email: str, message: str, price: float):
+    '''Send email message alerting of price below target'''
+    header = f"From: {OWN_EMAIL}\nTo: {email}\nMIME-Version: 1.0\nContent-type: text/html\nSubject: {product} price is below target -> {price}!\n\n"
+    email_message = header + message
+    with smtplib.SMTP("smtp.gmail.com", 587) as connection:
+        connection.starttls()
+        connection.login(OWN_EMAIL, OWN_PASSWORD)
+        connection.sendmail(OWN_EMAIL, email.split(";"), email_message)
 
 data = pandas.read_csv("products.csv")
 options = Options()
@@ -80,4 +94,4 @@ for index, product in data.iterrows():
                 with open(f"items/{product['item']}.csv", "w") as file:
                     file.write(f"Date,Price,Min,Max,Avg\n{today},{price},{price},{price},{price}\n")
     if 0 < price < float(product.target):
-        print(f"Buy {product.link}")
+        send_email(product['item'].title(), product.email, f"{product.link}", price)

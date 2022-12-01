@@ -69,6 +69,7 @@ for index, product in data.iterrows():
                 if item_price < price and i > 0 or i == 0:
                     price = item_price
     if price > 0:
+        last_price = 0
         try:
             with open(f"items/{product['item']}.csv", "r") as file:
                 lines = file.readlines()
@@ -93,5 +94,5 @@ for index, product in data.iterrows():
             else:
                 with open(f"items/{product['item']}.csv", "w") as file:
                     file.write(f"Date,Price,Min,Max,Avg\n{today},{price},{price},{price},{price}\n")
-    if 0 < price < float(product.target):
-        send_email(product['item'].title(), product.email, f"{product.link}", price)
+        if float(product.target) > price != last_price:
+            send_email(product['item'].title(), product.email, f"{product.link}", price)

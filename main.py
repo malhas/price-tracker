@@ -16,9 +16,11 @@ import os
 OWN_EMAIL = os.environ['SENDER_EMAIL']
 OWN_PASSWORD = os.environ['SENDER_EMAIL_PASSWORD']
 
-def price_str_to_float(price_euro:str, euro_pos:int = 0) -> float:
+
+def price_str_to_float(price_euro:str) -> float:
     '''Convert string price to float'''
-    return float(price_euro.split("€")[euro_pos].replace(",", "."))
+    return float(price_euro.replace("€", "").replace(",", "."))
+
 
 def send_email(product: str, email: str, message: str, price: float):
     '''Send email message alerting of price below target'''
@@ -28,6 +30,7 @@ def send_email(product: str, email: str, message: str, price: float):
         connection.starttls()
         connection.login(OWN_EMAIL, OWN_PASSWORD)
         connection.sendmail(OWN_EMAIL, email.split(";"), email_message)
+
 
 data = pandas.read_csv("products.csv")
 options = Options()
@@ -54,7 +57,7 @@ for index, product in data.iterrows():
     elif product.type == "class":
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.CLASS_NAME, product.location)))
-        price = price_str_to_float(price.text, 1)
+        price = price_str_to_float(price.text)
     elif product.type == "lionofporches":
         WebDriverWait(driver, 10).until(
             ec.element_to_be_clickable(
@@ -75,24 +78,14 @@ for index, product in data.iterrows():
                 lines = file.readlines()
         except FileNotFoundError:
             with open(f"items/{product['item']}.csv", "w") as file:
-                file.write(f"Date,Price,Min,Max,Avg\n{today},{price},{price},{price},{price}\n")
+                file.write(f"Date,Price\n{today},{price}\n")
         else:
             if len(lines) > 0:
                 item_data = pandas.read_csv(f"items/{product['item']}.csv")
-                last_price = item_data.iloc[-1]["Price"]
-                if last_price != price:
-                    item_data.loc[len(item_data)] = [today,price,numpy.NaN,numpy.NaN,numpy.NaN]
-                    max_price = max(item_data.Price)
-                    min_price = min(item_data.Price)
-                    print(item_data)
-                    print(min_price, max_price)
-                    if item_data.loc[0,"Min"] != min_price:
-                        item_data.loc[0,"Min"] = min_price
-                    if item_data.loc[0,"Max"] != max_price:
-                        item_data.loc[0,"Max"] = max_price
+                item_data.loc[len(item_data)] = [today,price]
                 item_data.to_csv(f"items/{product['item']}.csv", index=False)
             else:
                 with open(f"items/{product['item']}.csv", "w") as file:
-                    file.write(f"Date,Price,Min,Max,Avg\n{today},{price},{price},{price},{price}\n")
+                    file.write(f"Date,Price\n{today},{price}\n")
         if float(product.target) > price != last_price:
             send_email(product['item'].title(), product.email, f"{product.link}", price)

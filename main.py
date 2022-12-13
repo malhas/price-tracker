@@ -82,6 +82,7 @@ for index, product in data.iterrows():
         else:
             if len(lines) > 0:
                 item_data = pandas.read_csv(f"items/{product['item']}.csv")
+                last_price = item_data.iloc[-1]["Price"]
                 if item_data.Date[len(item_data)-1] != today:
                     item_data.loc[len(item_data)] = [today,price]
                 elif item_data.Price[len(item_data)-1] != price:

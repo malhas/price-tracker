@@ -87,5 +87,5 @@ for index, product in data.iterrows():
             else:
                 with open(f"items/{product['item']}.csv", "w") as file:
                     file.write(f"Date,Price\n{today},{price}\n")
-        if float(product.target) > price != last_price:
+        if float(product.target) >= price != last_price:
             send_email(product['item'].title(), product.email, f"{product.link}", price)

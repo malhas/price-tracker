@@ -49,7 +49,7 @@ today = datetime.now().date().strftime("%d-%m-%Y")
 for index, product in data.iterrows():
     price = 0
     driver.get(product.link)
-    time.sleep(1)
+    time.sleep(2)
     if product.type == "id":
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.ID, product.location)))
@@ -58,10 +58,10 @@ for index, product in data.iterrows():
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.CLASS_NAME, product.location)))
         price = price_str_to_float(price.text)
-    elif product.type == "lionofporches":
+    elif product.type == "search":
         WebDriverWait(driver, 10).until(
             ec.element_to_be_clickable(
-                (By.XPATH, '//*[@id="popup-campaign"]/div[2]'))).click()
+                (By.XPATH, product.location))).click()
         time.sleep(2)
         items = WebDriverWait(driver, 10).until(
             ec.presence_of_all_elements_located((By.CLASS_NAME, "current")))
@@ -82,7 +82,10 @@ for index, product in data.iterrows():
         else:
             if len(lines) > 0:
                 item_data = pandas.read_csv(f"items/{product['item']}.csv")
-                item_data.loc[len(item_data)] = [today,price]
+                if item_data.Date[len(item_data)-1] != today:
+                    item_data.loc[len(item_data)] = [today,price]
+                elif item_data.Price[len(item_data)-1] != price:
+                    item_data.loc[len(item_data)-1] = [today,price]
                 item_data.to_csv(f"items/{product['item']}.csv", index=False)
             else:
                 with open(f"items/{product['item']}.csv", "w") as file:

@@ -9,7 +9,6 @@ from selenium.common.exceptions import SessionNotCreatedException, WebDriverExce
 import pandas
 import time
 from datetime import datetime
-import numpy
 import smtplib
 import os
 
@@ -58,13 +57,13 @@ for index, product in data.iterrows():
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.CLASS_NAME, product.location)))
         price = price_str_to_float(price.text)
-    elif product.type == "search":
+    elif product.type == "lionofporches":
         WebDriverWait(driver, 10).until(
             ec.element_to_be_clickable(
-                (By.XPATH, product.location))).click()
+                (By.XPATH, '//*[@id="popup-campaign"]/div[2]'))).click()
         time.sleep(2)
         items = WebDriverWait(driver, 10).until(
-            ec.presence_of_all_elements_located((By.CLASS_NAME, "current")))
+            ec.presence_of_all_elements_located((By.CLASS_NAME, product.location)))
         if len(items) > 0:
             i = 0
             for item in items:

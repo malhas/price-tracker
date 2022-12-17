@@ -57,6 +57,10 @@ for index, product in data.iterrows():
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.CLASS_NAME, product.location)))
         price = price_str_to_float(price.text)
+    elif product.type == "xpath":
+        price = WebDriverWait(driver, 10).until(
+            ec.presence_of_element_located((By.XPATH, product.location)))
+        price = price_str_to_float(price.text)
     elif product.type == "lionofporches":
         WebDriverWait(driver, 10).until(
             ec.element_to_be_clickable(

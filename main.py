@@ -47,6 +47,7 @@ except WebDriverException:
 today = datetime.now().date().strftime("%d-%m-%Y")
 for index, product in data.iterrows():
     price = 0
+    print(product["item"])
     driver.get(product.link)
     time.sleep(2)
     if product.type == "id":
@@ -60,6 +61,10 @@ for index, product in data.iterrows():
     elif product.type == "xpath":
         price = WebDriverWait(driver, 10).until(
             ec.presence_of_element_located((By.XPATH, product.location)))
+        price = price_str_to_float(price.text)
+    elif product.type == "css":
+        price = WebDriverWait(driver, 10).until(
+            ec.presence_of_element_located((By.CSS_SELECTOR, product.location)))
         price = price_str_to_float(price.text)
     elif product.type == "lionofporches":
         WebDriverWait(driver, 10).until(

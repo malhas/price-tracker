@@ -5,7 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
+from selenium.common.exceptions import SessionNotCreatedException, WebDriverException, TimeoutException
 import pandas
 import time
 from datetime import datetime
@@ -16,6 +16,8 @@ OWN_EMAIL = os.environ['SENDER_EMAIL']
 OWN_PASSWORD = os.environ['SENDER_EMAIL_PASSWORD']
 
 SLEEP_TIME = 2
+POPUP_SLEEP_TIME = 2
+WEBDRIVER_WAIT_TIME = 5
 TODAY = datetime.now().date().strftime("%d-%m-%Y")
 
 # Selenium Options
@@ -49,18 +51,26 @@ def send_email(product: str, email: str, message: str, price: float):
 def get_price(locator, product) -> float:
     '''Get current price from product'''
     if str(product.popup) != 'nan':
-        WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.XPATH, product.popup))).click()
-        time.sleep(2)
-    items = WebDriverWait(driver, 10).until(ec.presence_of_all_elements_located((locator, product.location)))
-    price = 0
+        try:
+            WebDriverWait(driver, WEBDRIVER_WAIT_TIME).until(ec.element_to_be_clickable((By.XPATH, product.popup))).click()
+        except TimeoutException:
+            print("Popup not present!")
+        else:
+            time.sleep(POPUP_SLEEP_TIME)
+    try:
+        items = WebDriverWait(driver, WEBDRIVER_WAIT_TIME).until(ec.presence_of_all_elements_located((locator, product.location)))
+    except TimeoutException:
+        print("Price not found!")
+        items = []
+    product_price = 0
     i = 0
     for item in items:
         if item.text != "":
             item_price = price_str_to_float(item.text)
-            if item_price < price and i > 0 or i == 0:
-                price = item_price
+            if item_price < product_price and i > 0 or i == 0:
+                product_price = item_price
 
-    return price
+    return product_price
 
 
 if __name__ == "__main__":
@@ -83,7 +93,7 @@ if __name__ == "__main__":
         elif product.type == "xpath":
             product_locator = By.XPATH
         elif product.type == "css":
-            product_locator = By.CSS_SELECTOR
+             product_locator = By.CSS_SELECTOR
 
         price = get_price(product_locator, product)
         if price > 0:

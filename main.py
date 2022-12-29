@@ -61,6 +61,7 @@ def get_price(locator, product) -> float:
         items = WebDriverWait(driver, WEBDRIVER_WAIT_TIME).until(ec.presence_of_all_elements_located((locator, product.location)))
     except TimeoutException:
         print("Price not found!")
+        print(driver.page_source)
         items = []
     product_price = 0
     i = 0
